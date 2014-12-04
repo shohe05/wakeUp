@@ -19,14 +19,19 @@
 //  SimpleDemo
 //
 
+#import <AVFoundation/AVFoundation.h>
 #import "ViewController.h"
-
+#import <AudioToolbox/AudioServices.h>
+static BOOL isSleep = NO;
+static int closeCount = 0;
 @interface ViewController ()
 {
     int Status;
     HVC_FUNCTION ExecuteFlag;
+    AVCaptureSession *captureSession;
 }
 @property HVC_BLE *HvcBLE;
+@property (nonatomic) SystemSoundID wakeSound;
 
 @end
 
@@ -38,11 +43,14 @@
     Status = 0;
     ExecuteFlag = 0;
     [super viewDidLoad];
+    [self setupSound];
     // Do any additional setup after loading the view, typically from a nib.
     self.HvcBLE = [[HVC_BLE alloc] init];
     self.HvcBLE.delegateHVC = self;
     
     _ResultTextView.text = @"";
+    
+    [NSTimer scheduledTimerWithTimeInterval:0.1 target:self selector:@selector(waken) userInfo:nil repeats:YES];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -176,115 +184,112 @@
 
 -(void) onPostExecute:(HVC_RES *)result errcode:(HVC_ERRORCODE)err status:(unsigned char)outStatus
 {
+    NSLog(@"a");
     // 実行結果の受け取り
     NSString *resStr = @"";
     
-    if((err == HVC_NORMAL) && (outStatus == 0)){
+    //if((err == HVC_NORMAL) && (outStatus == 0)){
         // 人体検出
-        resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"Body Detect = %d\n", result.sizeBody]];
+        //resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"Body Detect = %d\n", result.sizeBody]];
         int i;
-        for(i = 0; i < result.sizeBody; i++){
-            DetectionResult *dt = [result body:i];
-            resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"  [Body Detection] : size = %d, ", dt.size]];
-            resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"x = %d, y = %d, ", dt.posX, dt.posY]];
-            resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"conf = %d\n", dt.confidence]];
-        }
-        
-        // 手検出
-        resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"Hand Detect = %d\n", result.sizeHand]];
-        for(i = 0; i < result.sizeHand; i++){
-            DetectionResult *dt = [result hand:i];
-            resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"  [Hand Detection] : size = %d, ", dt.size]];
-            resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"x = %d, y = %d, ", dt.posX, dt.posY]];
-            resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"conf = %d\n", dt.confidence]];
-        }
         
         // 顔検出と各種推定
-        resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"Face Detect = %d\n", result.sizeFace]];
+        //resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"Face Detect = %d\n", result.sizeFace]];
         for(i = 0; i < result.sizeFace; i++){
             FaceResult *fd = [result face:i];
             // 顔検出
             if((result.executedFunc & HVC_ACTIV_FACE_DETECTION) != 0){
-                resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"  [Face Detection] : size = %d, ", fd.size]];
-                resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"x = %d, y = %d, ", fd.posX, fd.posY]];
-                resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"conf = %d\n", fd.confidence]];
-            }
-            
-            // 顔向き推定
-            if((result.executedFunc & HVC_ACTIV_FACE_DIRECTION) != 0){
-                resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"  [Face Direction] : "]];
-                resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"yaw = %d, ", fd.dir.yaw]];
-                resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"pitch = %d, ", fd.dir.pitch]];
-                resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"roll = %d, ", fd.dir.roll]];
-                resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"conf = %d\n", fd.dir.confidence]];
-            }
-            
-            // 年齢推定
-            if((result.executedFunc & HVC_ACTIV_AGE_ESTIMATION) != 0){
-                resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"  [Age Estimation] : "]];
-                resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"age = %d, conf = %d\n", fd.age.age, fd.age.confidence]];
-            }
-            
-            // 性別推定
-            if((result.executedFunc & HVC_ACTIV_GENDER_ESTIMATION) != 0){
-                resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"  [Gender Estimation] : "]];
                 
-                NSString *gender;
-                if(fd.gen.gender == HVC_GEN_MALE){
-                    gender = @"Male";
-                }
-                else{
-                    gender = @"FeMale";
-                }
-                resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"gender = %@, conf = %d\n", gender, fd.gen.confidence]];
-            }
-            
-            // 視線推定
-            if((result.executedFunc & HVC_ACTIV_GAZE_ESTIMATION) != 0){
-                resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"  [Gaze Estimation] : "]];
-                resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"LR = %d, UD = %d\n", fd.gaze.gazeLR, fd.gaze.gazeUD]];
+                resStr = [resStr stringByAppendingString:@"顔ある！！！\n"];
+//
+//                resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"  [Face Detection] : size = %d, ", fd.size]];
+//                resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"x = %d, y = %d, ", fd.posX, fd.posY]];
+//                resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"conf = %d\n", fd.confidence]];
+            } else {
+                resStr = [resStr stringByAppendingString:@"顔ない！！！\n"];
             }
             
             // 目つむり推定
             if((result.executedFunc & HVC_ACTIV_BLINK_ESTIMATION) != 0){
-                resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"  [Blink Estimation] : "]];
-                resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"ratioL = %d, ratioR = %d\n", fd.blink.ratioL, fd.blink.ratioR]];
-            }
-            
-            // 表情推定
-            if((result.executedFunc & HVC_ACTIV_EXPRESSION_ESTIMATION) != 0){
-                resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"  [Expression Estimation] : "]];
-                
-                NSString *expression;
-                switch(fd.exp.expression){
-                    case HVC_EX_NEUTRAL:
-                        expression = @"Neutral";
-                        break;
-                    case HVC_EX_HAPPINESS:
-                        expression = @"Happiness";
-                        break;
-                    case HVC_EX_SURPRISE:
-                        expression = @"Surprise";
-                        break;
-                    case HVC_EX_ANGER:
-                        expression = @"Anger";
-                        break;
-                    case HVC_EX_SADNESS:
-                        expression = @"Sadness";
-                        break;
+                          //     resStr = [resStr stringByAppendingString:@"目瞑ってる！！！！！\n"];
+//               resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"  [Blink Estimation] : "]];
+//                resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"ratioL = %d, ratioR = %d\n", fd.blink.ratioL, fd.blink.ratioR]];
+                if ((int)fd.blink.ratioL > 600) {
+                    closeCount++;
+                    resStr = [resStr stringByAppendingString:@"目瞑ってる！！！！！\n"];
+                    [self vibration];
+                } else {
+                    closeCount = 0;
+                    resStr = [resStr stringByAppendingString:@"目あいてる！！！！！\n"];
                 }
-                resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"expression = %@, ", expression]];
-                resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"score = %d, ", fd.exp.score]];
-                resStr = [resStr stringByAppendingString:[NSString stringWithFormat:@"degree = %d\n", fd.exp.degree]];
+                [self detectSleeping];
             }
         }
-    }
+    //}
     _ResultTextView.text = resStr;
 
     if ( Status == 2 ) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [self.HvcBLE Execute:ExecuteFlag result:result];
         });
+    }
+}
+
+- (void)setupSound
+{
+    NSString *path = [[NSBundle mainBundle] pathForResource:@"wakeSound" ofType:@"mp3"];
+    NSURL *url = [NSURL fileURLWithPath:path];
+    AudioServicesCreateSystemSoundID(CFBridgingRetain(url),&_wakeSound);
+}
+
+- (void)playWakeSound
+{
+    AudioServicesPlaySystemSound(_wakeSound);
+}
+
+- (void) vibration
+{
+    AudioServicesPlaySystemSound(kSystemSoundID_Vibrate);
+}
+
+//LEDライトを点灯
+-(void)lightOn
+{
+    [captureSession startRunning];
+    NSError *error = nil;
+    AVCaptureDevice *captureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+    [captureDevice lockForConfiguration:&error];
+    captureDevice.torchMode = AVCaptureTorchModeOn;
+    [captureDevice unlockForConfiguration];
+}
+
+//LEDライトを消灯
+-(void)lightOff
+{
+    NSError *offerror = nil;
+    AVCaptureDevice *offcaptureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+    
+    [offcaptureDevice lockForConfiguration:&offerror];
+    offcaptureDevice.torchMode = AVCaptureTorchModeOff;
+    [offcaptureDevice unlockForConfiguration];
+}
+
+- (void) detectSleeping
+{
+    isSleep = closeCount > 1 ? YES : NO;
+}
+
+- (void) waken
+{
+    if (isSleep) {
+        [self vibration];
+        if(closeCount > 3) {
+            [self playWakeSound];
+        }
+        if(closeCount > 5) {
+            [self lightOn];
+             [self performSelector:@selector(lightOff) withObject:nil afterDelay:0.05];
+        }
     }
 }
 
