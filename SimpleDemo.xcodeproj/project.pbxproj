@@ -16,6 +16,8 @@
 		0D83AC3719F4D7540016DC1A /* SimpleDemoTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0D83AC3619F4D7540016DC1A /* SimpleDemoTests.m */; };
 		0D93D39119F62A30003046C1 /* ExternalAccessory.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D93D39019F62A30003046C1 /* ExternalAccessory.framework */; };
 		0D93D39519F634BB003046C1 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D93D39419F634BB003046C1 /* CoreBluetooth.framework */; };
+		59985CF01A3927C900584D0F /* sleep.jpeg in Resources */ = {isa = PBXBuildFile; fileRef = 59985CEF1A3927C900584D0F /* sleep.jpeg */; };
+		59985CF21A3927D100584D0F /* wake.jpeg in Resources */ = {isa = PBXBuildFile; fileRef = 59985CF11A3927D100584D0F /* wake.jpeg */; };
 		59A696421A306DD0006E52C3 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 59A696411A306DD0006E52C3 /* AudioToolbox.framework */; };
 		59A696441A3075A9006E52C3 /* wakeSound.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 59A696431A3075A9006E52C3 /* wakeSound.mp3 */; };
 		59A696461A3078DA006E52C3 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 59A696451A3078DA006E52C3 /* AVFoundation.framework */; };
@@ -50,6 +52,8 @@
 		0D93D39019F62A30003046C1 /* ExternalAccessory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExternalAccessory.framework; path = System/Library/Frameworks/ExternalAccessory.framework; sourceTree = SDKROOT; };
 		0D93D39219F62A30003046C1 /* SimpleDemo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = SimpleDemo.entitlements; sourceTree = "<group>"; };
 		0D93D39419F634BB003046C1 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
+		59985CEF1A3927C900584D0F /* sleep.jpeg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = sleep.jpeg; sourceTree = "<group>"; };
+		59985CF11A3927D100584D0F /* wake.jpeg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = wake.jpeg; sourceTree = "<group>"; };
 		59A696411A306DD0006E52C3 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		59A696431A3075A9006E52C3 /* wakeSound.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = wakeSound.mp3; sourceTree = "<group>"; };
 		59A696451A3078DA006E52C3 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
@@ -122,6 +126,8 @@
 		0D83AC1A19F4D7540016DC1A /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				59985CF11A3927D100584D0F /* wake.jpeg */,
+				59985CEF1A3927C900584D0F /* sleep.jpeg */,
 				59A696431A3075A9006E52C3 /* wakeSound.mp3 */,
 				0D83AC1B19F4D7540016DC1A /* Info.plist */,
 				0D83AC1C19F4D7540016DC1A /* main.m */,
@@ -232,10 +238,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				59985CF01A3927C900584D0F /* sleep.jpeg in Resources */,
 				59A696441A3075A9006E52C3 /* wakeSound.mp3 in Resources */,
 				0D83AC2619F4D7540016DC1A /* Main.storyboard in Resources */,
 				0D83AC2B19F4D7540016DC1A /* LaunchScreen.xib in Resources */,
 				0D83AC2819F4D7540016DC1A /* Images.xcassets in Resources */,
+				59985CF21A3927D100584D0F /* wake.jpeg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -391,6 +399,7 @@
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -412,6 +421,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};

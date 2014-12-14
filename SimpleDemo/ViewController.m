@@ -1,22 +1,5 @@
-/*
- * Copyright (C) 2014 OMRON Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 //
 //  ViewController.m
-//  SimpleDemo
 //
 
 #import <AVFoundation/AVFoundation.h>
@@ -24,6 +7,7 @@
 #import <AudioToolbox/AudioServices.h>
 static BOOL isSleep = NO;
 static int closeCount = 0;
+//static int alertFlag = 0;
 @interface ViewController ()
 {
     int Status;
@@ -32,6 +16,8 @@ static int closeCount = 0;
 }
 @property HVC_BLE *HvcBLE;
 @property (nonatomic) SystemSoundID wakeSound;
+@property (weak, nonatomic) IBOutlet UIImageView *imageView;
+@property (weak, nonatomic) IBOutlet UILabel *statusLabel;
 
 @end
 
@@ -49,6 +35,7 @@ static int closeCount = 0;
     self.HvcBLE.delegateHVC = self;
     
     _ResultTextView.text = @"";
+    _statusLabel.text = @"Connecetしてください";
     
     [NSTimer scheduledTimerWithTimeInterval:0.1 target:self selector:@selector(waken) userInfo:nil repeats:YES];
 }
@@ -109,7 +96,15 @@ static int closeCount = 0;
 // アラートの処理（デリゲートメソッド）
 - (void) alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
 {
-    if (buttonIndex == 0) {
+    
+//    if (alertView.tag == 1) {
+//        if (buttonIndex == 0) {
+//            closeCount = 0;
+//            alertFlag = 0;
+//        }
+//        
+//    } else {
+     if (buttonIndex == 0) {
         // キャンセルボタン
         NSLog(@"キャンセルされました");
         [self.pushbutton setTitle:@"connect" forState:UIControlStateNormal];
@@ -119,7 +114,9 @@ static int closeCount = 0;
         [self.HvcBLE connect:deviseList[buttonIndex-1]];
         [self.pushbutton setTitle:@"disconnect" forState:UIControlStateNormal];
         Status = 1;
+        _statusLabel.text = @"startを押してください";
     }
+//}
 }
 
 - (IBAction)btnExecute_click:(UIButton *)sender {
@@ -128,10 +125,12 @@ static int closeCount = 0;
         case 0:
             return;
         case 1:
+            _statusLabel.text = @"デバイスが顔の前にくるようにしてください…";
             [self.btnExecution setTitle:@"stop" forState:UIControlStateNormal];
             Status = 2;
             break;
         case 2:
+            _statusLabel.text = @"startをおしてください";
             [self.btnExecution setTitle:@"start" forState:UIControlStateNormal];
             Status = 1;
             return;
@@ -226,7 +225,7 @@ static int closeCount = 0;
             }
         }
     //}
-    _ResultTextView.text = resStr;
+    //_ResultTextView.text = resStr;
 
     if ( Status == 2 ) {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -265,8 +264,7 @@ static int closeCount = 0;
 
 //LEDライトを消灯
 -(void)lightOff
-{
-    NSError *offerror = nil;
+{          NSError *offerror = nil;
     AVCaptureDevice *offcaptureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
     
     [offcaptureDevice lockForConfiguration:&offerror];
@@ -276,21 +274,51 @@ static int closeCount = 0;
 
 - (void) detectSleeping
 {
-    isSleep = closeCount > 1 ? YES : NO;
+    isSleep = closeCount > 0 ? YES : NO;
+    if (isSleep) {
+        _imageView.image = [UIImage imageNamed:@"sleep.jpeg"];
+        _statusLabel.text = @"起きて！！";
+        //self.view.backgroundColor = [UIColor redColor];
+    } else {
+        _imageView.image = [UIImage imageNamed:@"wake.jpeg"];
+        _statusLabel.text = @"起きてます！！";
+        //self.view.backgroundColor = [UIColor greenColor];
+    }
 }
 
 - (void) waken
 {
     if (isSleep) {
-        [self vibration];
-        if(closeCount > 3) {
+        /*
+        if (alertFlag == 0) {
+            [self wakeAlert];
+        }
+        alertFlag++;
+        */
+         [self vibration];
+        if(closeCount > 1) {
             [self playWakeSound];
         }
-        if(closeCount > 5) {
+        if(closeCount > 2) {
             [self lightOn];
-             [self performSelector:@selector(lightOff) withObject:nil afterDelay:0.05];
+            [self performSelector:@selector(lightOff) withObject:nil afterDelay:0.05];
         }
     }
+}
+
+/*
+- (void) wakeAlert
+{
+    UIAlertView *aler =
+    [[UIAlertView alloc] initWithTitle:@"起きてください" message:@"起きてください"
+                              delegate:self cancelButtonTitle:@"起きた" otherButtonTitles:nil];
+    aler.tag = 1;
+    [aler show];
+}
+*/
+ 
+- (IBAction)buttonTouched:(UIButton *)sender {
+    _statusLabel.text = @"デバイス検出中…";
 }
 
 @end
